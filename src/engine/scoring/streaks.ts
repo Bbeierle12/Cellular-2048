@@ -9,6 +9,6 @@ export function updateStreak(state: StreakState, stabilityIncremented: boolean):
   }
 
   const nextStreak = state.streak + 1;
-  const multiplier = Math.min(1 + Math.floor(nextStreak / 3), 5);
+  const multiplier = Math.min(1 + 0.25 * (nextStreak - 1), 3);
   return { streak: nextStreak, multiplier };
 }

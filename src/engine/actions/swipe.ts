@@ -1,7 +1,7 @@
 import { applyCatalyst } from "./catalyst";
 import { mergeCells } from "./merge";
-import { cloneGrid, createEmptyCell, type Grid } from "../grid/grid";
-import { isAlive } from "../grid/cell";
+import { cloneGrid, type Grid } from "../grid/grid";
+import { createEmptyCell, isAlive } from "../grid/cell";
 
 export type Direction = "up" | "down" | "left" | "right";
 

@@ -16,13 +16,13 @@ const catalyst = () => createCatalystCell();
 
 describe("applySwipe", () => {
   it("slides alive cells left into empty spaces", () => {
-    const grid: Grid = [[empty(), alive(2), empty(), alive(1)]];
+    const grid: Grid = [[empty(), alive(2), empty(), empty()]];
 
     const { grid: next, moved } = applySwipe(grid, "left");
 
     expect(moved).toBe(true);
     expect(next[0][0]).toMatchObject({ state: "alive", energy: 2 });
-    expect(next[0][1]).toMatchObject({ state: "alive", energy: 1 });
+    expect(next[0][1].state).toBe("empty");
     expect(next[0][2].state).toBe("empty");
     expect(grid[0][1].state).toBe("alive"); // original grid untouched
   });

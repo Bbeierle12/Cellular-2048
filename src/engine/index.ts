@@ -5,6 +5,8 @@ export * from "./actions/catalyst";
 export * from "./lifecycle/life-tick";
 export * from "./lifecycle/dormancy";
 export * from "./lifecycle/blight";
+export * from "./lifecycle/decay";
 export * from "./scoring";
 export * from "./rng/seed";
 export * from "./telemetry/tracker";
+export * from "./turn";
