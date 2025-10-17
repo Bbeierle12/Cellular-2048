@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
 import { useGameState, selectBoardSnapshot, createSwipeAction } from "../../state";
 import type { BoardSnapshot, SerializedCell } from "../../state";
 import { GhostPreview } from "./GhostPreview";
@@ -14,6 +14,7 @@ export function GameBoard(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [state, dispatch] = useGameState();
   const boardSnapshot = selectBoardSnapshot(state);
+  const [showGhostPreview, setShowGhostPreview] = useState(false);
 
   // Handle keyboard input
   useEffect(() => {
@@ -43,6 +44,12 @@ export function GameBoard(): JSX.Element {
       if (e.key === "r" || e.key === "R") {
         e.preventDefault();
         dispatch({ type: "RESET" });
+      }
+
+      // Toggle ghost preview on G key
+      if (e.key === "g" || e.key === "G") {
+        e.preventDefault();
+        setShowGhostPreview((prev) => !prev);
       }
     };
 
@@ -97,9 +104,25 @@ export function GameBoard(): JSX.Element {
         isGameOver={state.isGameOver}
         hasWon={state.hasWon}
       />
-      <div className="game-board" onPointerDown={(e) => handleSwipeStart(e, handleSwipe)}>
-        <canvas ref={canvasRef} className="grid-canvas" />
-        <GhostPreview grid={state.grid} lifeOptions={state.difficulty} />
+      <div 
+        className="game-board" 
+        onPointerDown={(e) => handleSwipeStart(e, handleSwipe)}
+        role="application"
+        aria-label="Game grid: Use arrow keys or WASD to swipe cells"
+        tabIndex={0}
+      >
+        <canvas 
+          ref={canvasRef} 
+          className="grid-canvas"
+          role="img"
+          aria-label={`Game grid with ${state.grid.length} by ${state.grid[0]?.length || 0} cells`}
+        />
+        <GhostPreview
+          grid={state.grid}
+          lifeOptions={state.difficulty}
+          cellSize={calculateCellSize(state.grid.length, state.grid[0]?.length || 0)}
+          visible={showGhostPreview}
+        />
         <EnergyRing
           energy={state.totalEnergy}
           threshold={state.difficulty.stabilizeThreshold}
@@ -108,6 +131,16 @@ export function GameBoard(): JSX.Element {
       </div>
     </div>
   );
+}
+
+// Calculate cell size based on grid dimensions
+// This matches the calculation in drawGrid
+function calculateCellSize(rows: number, cols: number): number {
+  // Use typical canvas size (adjust if needed)
+  const canvasSize = 600; // Approximate canvas size
+  const availableWidth = canvasSize - PADDING * 2 - CELL_GAP * (cols - 1);
+  const availableHeight = canvasSize - PADDING * 2 - CELL_GAP * (rows - 1);
+  return Math.min(availableWidth / cols, availableHeight / rows);
 }
 
 function drawGrid(
