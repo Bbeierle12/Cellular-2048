@@ -1,4 +1,4 @@
-import { cloneCell, createEmptyCell, type Cell } from "./cell";
+import { cloneCell, createEmptyCell, createAliveCell, type Cell } from "./cell";
 
 export type Grid = Cell[][];
 
@@ -12,8 +12,27 @@ export function createGrid({ rows, cols }: GridDimensions, seed: () => number): 
     Array.from({ length: cols }, () => createEmptyCell())
   );
 
-  // TODO: seed starting cells using provided RNG
-  seed();
+  // Seed 2-4 starting cells with E=1 using provided RNG
+  const numStartCells = Math.floor(seed() * 3) + 2; // 2-4 cells
+  const maxAttempts = 100; // Prevent infinite loop
+  
+  for (let i = 0; i < numStartCells && i < maxAttempts; i++) {
+    let row = Math.floor(seed() * rows);
+    let col = Math.floor(seed() * cols);
+    
+    // Try to find an empty position
+    let attempts = 0;
+    while (grid[row][col].state !== "empty" && attempts < maxAttempts) {
+      row = Math.floor(seed() * rows);
+      col = Math.floor(seed() * cols);
+      attempts++;
+    }
+    
+    if (grid[row][col].state === "empty") {
+      grid[row][col] = createAliveCell(1);
+    }
+  }
+  
   return grid;
 }
 
