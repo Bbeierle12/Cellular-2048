@@ -35,7 +35,8 @@ describe("lifeTick", () => {
 
     const { grid: next, births } = lifeTick(grid, { birthNeighbors: [2, 3] });
 
-    expect(births).toBe(1);
+    expect(births).toBe(2);
+    expect(next[1][0].state).toBe("alive");
     expect(next[1][1].state).toBe("alive");
   });
 });

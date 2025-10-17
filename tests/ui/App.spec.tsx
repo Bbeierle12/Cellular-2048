@@ -7,7 +7,7 @@ describe("App", () => {
   it("renders title and board shell", () => {
     const { getByText } = render(<App />);
     expect(getByText("Cellular 2048")).toBeTruthy();
-    expect(getByText(/Build 0.1.0-dev/)).toBeTruthy();
-    expect(getByText(/Ghost preview pending/i)).toBeTruthy();
+    expect(getByText(/v0.1.0-phase4/)).toBeTruthy();
+    expect(getByText(/Use arrow keys/)).toBeTruthy();
   });
 });

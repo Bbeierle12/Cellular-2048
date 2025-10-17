@@ -6,6 +6,7 @@ export * from "./lifecycle/life-tick";
 export * from "./lifecycle/dormancy";
 export * from "./lifecycle/blight";
 export * from "./lifecycle/decay";
+export * from "./hazards/spawn";
 export * from "./scoring";
 export * from "./rng/seed";
 export * from "./telemetry/tracker";

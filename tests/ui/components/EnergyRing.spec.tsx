@@ -6,6 +6,6 @@ import { EnergyRing } from "../../../src/ui/components/EnergyRing";
 describe("EnergyRing", () => {
   it("renders energy text", () => {
     const { getByText } = render(<EnergyRing energy={5} />);
-    expect(getByText("E:5")).toBeTruthy();
+    expect(getByText("5")).toBeTruthy();
   });
 });

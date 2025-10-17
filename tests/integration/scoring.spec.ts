@@ -5,8 +5,8 @@ describe("tallyScore", () => {
   it("sums cell energy", () => {
     const grid = [
       [
-        { state: "alive", energy: 2 },
-        { state: "alive", energy: 3 }
+        { state: "alive" as const, energy: 2 },
+        { state: "alive" as const, energy: 3 }
       ]
     ];
     const result = tallyScore(grid, false);

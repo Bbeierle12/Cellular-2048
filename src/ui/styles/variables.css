@@ -3,4 +3,7 @@
   --cell-empty: #1b2230;
   --cell-alive: #48b2ff;
   --cell-dormant: #6c7a91;
+  --cell-blight: #ff4d6d;
+  --cell-catalyst: #ffe066;
 }
+

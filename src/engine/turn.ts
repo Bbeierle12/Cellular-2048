@@ -10,6 +10,9 @@ import { applyIsolationDecay } from "./lifecycle/decay";
 import type { StreakState } from "./scoring/streaks";
 import { updateStreak } from "./scoring/streaks";
 import { tallyScore } from "./scoring";
+import type { BlightSpawnConfig, CatalystSpawnConfig, Rng } from "./hazards/spawn";
+import { spawnBlightTokens, spawnCatalysts } from "./hazards/spawn";
+import { applyBlight } from "./lifecycle/blight";
 
 export interface TurnContext {
   grid: Grid;
@@ -20,6 +23,13 @@ export interface TurnContext {
   decayConfig?: IsolationDecayConfig;
   streakState: StreakState;
   score: number;
+  hazards?: TurnHazardConfig;
+  rng?: Rng;
+}
+
+export interface TurnHazardConfig {
+  blight?: BlightSpawnConfig;
+  catalyst?: CatalystSpawnConfig;
 }
 
 export interface TurnOutcome {
@@ -34,11 +44,35 @@ export interface TurnOutcome {
   deaths: number;
   dormancyConversions: number;
   decays: number;
+  blightConversions: number;
+  blightSpawns: number;
+  catalystSpawns: number;
   stabilityIncremented: boolean;
 }
 
 export function executeTurn(context: TurnContext): TurnOutcome {
-  const swipeResult = applySwipe(context.grid, context.direction, context.swipeOptions);
+  let workingGrid = context.grid;
+  let blightSpawns = 0;
+  let catalystSpawns = 0;
+
+  if (context.hazards) {
+    if (!context.rng) {
+      throw new Error("Hazard spawning requires an RNG");
+    }
+    const rng = context.rng;
+    if (context.hazards.catalyst) {
+      const result = spawnCatalysts(workingGrid, context.hazards.catalyst, rng);
+      workingGrid = result.grid;
+      catalystSpawns = result.spawned;
+    }
+    if (context.hazards.blight) {
+      const result = spawnBlightTokens(workingGrid, context.hazards.blight, rng);
+      workingGrid = result.grid;
+      blightSpawns = result.spawned;
+    }
+  }
+
+  const swipeResult = applySwipe(workingGrid, context.direction, context.swipeOptions);
 
   const lifeResult = lifeTick(swipeResult.grid, context.lifeOptions);
 
@@ -46,9 +80,13 @@ export function executeTurn(context: TurnContext): TurnOutcome {
     bornPositions: lifeResult.bornPositions
   });
 
+  const blightResult = applyBlight(dormancyResult.grid, {
+    lifeOptions: context.lifeOptions
+  });
+
   const decayResult = context.decayConfig
-    ? applyIsolationDecay(dormancyResult.grid, context.decayConfig)
-    : { grid: dormancyResult.grid, decayed: 0 };
+    ? applyIsolationDecay(blightResult.grid, context.decayConfig)
+    : { grid: blightResult.grid, decayed: 0 };
 
   const hadBirthOrDeath = lifeResult.births > 0 || lifeResult.deaths > 0;
   const scoreResult = tallyScore(decayResult.grid, hadBirthOrDeath);
@@ -68,6 +106,9 @@ export function executeTurn(context: TurnContext): TurnOutcome {
     deaths: lifeResult.deaths,
     dormancyConversions: dormancyResult.converted,
     decays: decayResult.decayed,
+    blightConversions: blightResult.conversions,
+    blightSpawns,
+    catalystSpawns,
     stabilityIncremented: scoreResult.stabilityIncremented
   };
 }
