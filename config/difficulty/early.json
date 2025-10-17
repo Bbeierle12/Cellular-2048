@@ -1,0 +1,10 @@
+{
+  "name": "early",
+  "boardSize": 6,
+  "eCap": 8,
+  "birthRule": "2-3",
+  "blight": "off",
+  "decay": "off",
+  "catalystRate": "low",
+  "stabilizeThreshold": 25
+}

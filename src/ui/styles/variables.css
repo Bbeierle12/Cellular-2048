@@ -1,0 +1,6 @@
+:root {
+  --board-bg: #10141f;
+  --cell-empty: #1b2230;
+  --cell-alive: #48b2ff;
+  --cell-dormant: #6c7a91;
+}

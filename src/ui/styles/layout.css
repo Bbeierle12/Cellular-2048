@@ -1,0 +1,22 @@
+@import "./variables.css";
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--board-bg);
+  color: white;
+}
+
+.app-shell {
+  padding: 1.5rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.game-board {
+  position: relative;
+  width: min(80vw, 480px);
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background: var(--cell-empty);
+}

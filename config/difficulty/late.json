@@ -1,0 +1,9 @@
+{
+  "name": "late",
+  "boardSize": 8,
+  "eCap": 10,
+  "birthRule": "3",
+  "blight": "medium:linger2",
+  "decay": "isolated:-2",
+  "catalystRate": "medium"
+}

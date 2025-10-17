@@ -1,0 +1,9 @@
+{
+  "name": "mid",
+  "boardSize": 6,
+  "eCap": 8,
+  "birthRule": "3",
+  "blight": "low",
+  "decay": "isolated:-1",
+  "catalystRate": "low"
+}

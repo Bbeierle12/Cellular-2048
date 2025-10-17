@@ -1,0 +1,7 @@
+{
+  "empty": "#1b2230",
+  "alive": "#48b2ff",
+  "dormant": "#6c7a91",
+  "blight": "#ff4d6d",
+  "catalyst": "#ffe066"
+}
