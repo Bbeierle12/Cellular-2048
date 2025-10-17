@@ -4,6 +4,7 @@ import type { BoardSnapshot, SerializedCell } from "../../state";
 import { GhostPreview } from "./GhostPreview";
 import { EnergyRing } from "./EnergyRing";
 import { ScorePanel } from "./ScorePanel";
+import { ParticleCanvas } from "./ParticleCanvas";
 import palette from "../assets/palette.json";
 
 const CELL_GAP = 4;
@@ -50,6 +51,12 @@ export function GameBoard(): JSX.Element {
       if (e.key === "g" || e.key === "G") {
         e.preventDefault();
         setShowGhostPreview((prev) => !prev);
+      }
+
+      // Toggle mode on M key
+      if (e.key === "m" || e.key === "M") {
+        e.preventDefault();
+        dispatch({ type: "TOGGLE_MODE" });
       }
     };
 
@@ -108,21 +115,32 @@ export function GameBoard(): JSX.Element {
         className="game-board" 
         onPointerDown={(e) => handleSwipeStart(e, handleSwipe)}
         role="application"
-        aria-label="Game grid: Use arrow keys or WASD to swipe cells"
+        aria-label={`${state.mode === "particle" ? "Particle" : "Grid"} mode: Use arrow keys or WASD to swipe`}
         tabIndex={0}
       >
-        <canvas 
-          ref={canvasRef} 
-          className="grid-canvas"
-          role="img"
-          aria-label={`Game grid with ${state.grid.length} by ${state.grid[0]?.length || 0} cells`}
-        />
-        <GhostPreview
-          grid={state.grid}
-          lifeOptions={state.difficulty}
-          cellSize={calculateCellSize(state.grid.length, state.grid[0]?.length || 0)}
-          visible={showGhostPreview}
-        />
+        {state.mode === "particle" && state.particleField ? (
+          <ParticleCanvas
+            field={state.particleField}
+            width={600}
+            height={600}
+            showTrails={true}
+          />
+        ) : (
+          <>
+            <canvas 
+              ref={canvasRef} 
+              className="grid-canvas"
+              role="img"
+              aria-label={`Game grid with ${state.grid.length} by ${state.grid[0]?.length || 0} cells`}
+            />
+            <GhostPreview
+              grid={state.grid}
+              lifeOptions={state.difficulty}
+              cellSize={calculateCellSize(state.grid.length, state.grid[0]?.length || 0)}
+              visible={showGhostPreview}
+            />
+          </>
+        )}
         <EnergyRing
           energy={state.totalEnergy}
           threshold={state.difficulty.stabilizeThreshold}

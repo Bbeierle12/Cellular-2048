@@ -253,7 +253,16 @@ body {
 
 .ring-streak {
   font-size: 0.875rem;
-  opacity: 0.8;
+  opacity: 0.5;
+}
+
+/* Particle canvas specific styling */
+.particle-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+  border-radius: 12px;
 }
 
 @media (max-width: 768px) {

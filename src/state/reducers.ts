@@ -2,8 +2,11 @@ import type { GameState, GameAction, GameConfig, TurnMetrics } from "./types";
 import type { Direction } from "../engine/actions/swipe";
 import { buildEngineConfig } from "./engine-config";
 import { createGrid } from "../engine/grid/grid";
+import { createParticleField } from "../engine/particle";
 import { createSeededRng } from "../engine/rng/seed";
 import { executeTurn } from "../engine/turn";
+import { executeParticleTurn } from "../engine/particle-turn";
+import { defaultPhysicsConfig } from "../engine/particle/physics";
 import { calculateTotalEnergy, isGameOver, checkWinCondition } from "./board-serializer";
 import { defaultFlags } from "../../config/feature-flags";
 
@@ -13,10 +16,17 @@ import { defaultFlags } from "../../config/feature-flags";
 export function createInitialState(config: GameConfig): GameState {
   const seed = config.seed ?? Date.now();
   const boardSize = config.boardSize ?? config.difficulty.boardSize;
+  const mode = config.mode ?? "particle"; // Default to particle mode
   const rng = createSeededRng(seed);
 
+  const grid = createGrid({ rows: boardSize, cols: boardSize }, rng);
+  const rng2 = createSeededRng(seed); // Reset RNG for particles
+  const particleField = createParticleField(8, rng2); // Start with 8 particles
+
   return {
-    grid: createGrid({ rows: boardSize, cols: boardSize }, rng),
+    mode,
+    grid,
+    particleField,
     score: 0,
     streakState: { streak: 0, multiplier: 1.0 },
     totalEnergy: 0,
@@ -42,14 +52,16 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         difficulty: action.config.difficulty ?? state.difficulty,
         featureFlags: action.config.featureFlags ?? state.featureFlags,
         seed: action.config.seed,
-        boardSize: action.config.boardSize
+        boardSize: action.config.boardSize,
+        mode: action.config.mode ?? state.mode
       });
 
     case "RESET":
       return createInitialState({
         difficulty: state.difficulty,
         featureFlags: state.featureFlags,
-        seed: Date.now()
+        seed: Date.now(),
+        mode: state.mode
       });
 
     case "UPDATE_FLAGS":
@@ -58,8 +70,18 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         featureFlags: { ...state.featureFlags, ...action.flags }
       };
 
+    case "TOGGLE_MODE":
+      return createInitialState({
+        difficulty: state.difficulty,
+        featureFlags: state.featureFlags,
+        seed: Date.now(),
+        mode: state.mode === "grid" ? "particle" : "grid"
+      });
+
     case "SWIPE":
-      return executeSwipeTurn(state, action.direction);
+      return state.mode === "particle"
+        ? executeParticleSwipeTurn(state, action.direction)
+        : executeSwipeTurn(state, action.direction);
 
     default:
       return state;
@@ -160,6 +182,94 @@ function executeSwipeTurn(
     score: turnOutcome.score,
     streakState: turnOutcome.streakState,
     totalEnergy: newTotalEnergy,
+    turnNumber: state.turnNumber + 1,
+    rngCallCount: state.rngCallCount + 1,
+    isGameOver: gameOver,
+    hasWon,
+    metrics: [...state.metrics, turnMetrics],
+    lastTurnMetrics: turnMetrics
+  };
+}
+
+/**
+ * Execute a swipe turn in particle mode
+ */
+function executeParticleSwipeTurn(
+  state: GameState,
+  direction: "N" | "E" | "S" | "W"
+): GameState {
+  // Don't allow moves if game is over
+  if (state.isGameOver || state.hasWon) {
+    return state;
+  }
+
+  if (!state.particleField) {
+    console.error("No particle field in state");
+    return state;
+  }
+
+  // Map compass directions to engine directions
+  const directionMap: Record<"N" | "E" | "S" | "W", "up" | "down" | "left" | "right"> = {
+    N: "up",
+    E: "right",
+    S: "down",
+    W: "left"
+  };
+  const engineDirection = directionMap[direction];
+
+  // Execute particle turn
+  const turnOutcome = executeParticleTurn({
+    field: state.particleField,
+    direction: engineDirection,
+    forceStrength: 0.2,
+    mergeOptions: {
+      eCap: state.difficulty.eCap
+    },
+    lifeOptions: {
+      birthRule: state.difficulty.birthRule,
+      neighborRadius: 0.15,
+      birthRadius: 0.12,
+      maxBirths: 10
+    },
+    physicsConfig: defaultPhysicsConfig,
+    streakState: state.streakState,
+    score: state.score,
+    maxPhysicsSteps: 60
+  });
+
+  if (!turnOutcome.moved) {
+    return state;
+  }
+
+  // Create turn metrics for telemetry
+  const turnMetrics: TurnMetrics = {
+    turnNumber: state.turnNumber + 1,
+    moved: turnOutcome.moved,
+    merges: turnOutcome.merges,
+    births: turnOutcome.births,
+    deaths: turnOutcome.deaths,
+    dormancyConversions: 0, // TODO: implement for particles
+    decays: 0, // TODO: implement for particles
+    blightConversions: 0,
+    blightSpawns: 0,
+    catalystSpawns: 0,
+    catalystUses: 0,
+    turnScore: turnOutcome.turnScore,
+    totalEnergy: turnOutcome.totalEnergy,
+    stabilityIncremented: turnOutcome.stabilityIncremented,
+    timestamp: Date.now()
+  };
+
+  // Check game state (simplified for particles)
+  const gameOver = turnOutcome.field.filter(p => p.state === "alive").length === 0;
+  const hasWon = turnOutcome.totalEnergy >= state.difficulty.stabilizeThreshold;
+
+  return {
+    ...state,
+    particleField: turnOutcome.field,
+    score: turnOutcome.score,
+    streakState: turnOutcome.streakState,
+    totalEnergy: turnOutcome.totalEnergy,
     turnNumber: state.turnNumber + 1,
     rngCallCount: state.rngCallCount + 1,
     isGameOver: gameOver,

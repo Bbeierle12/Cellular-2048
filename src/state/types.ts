@@ -1,5 +1,6 @@
 import type { Grid } from "../engine/grid/grid";
 import type { Cell } from "../engine/grid/cell";
+import type { ParticleField } from "../engine/particle";
 import type { StreakState } from "../engine/scoring/streaks";
 import type { Seed } from "../engine/rng/seed";
 import type { LifeTickOptions } from "../engine/lifecycle/life-tick";
@@ -72,8 +73,10 @@ export interface BoardSnapshot {
  * Complete game state
  */
 export interface GameState {
-  // Core board
+  // Core board (either grid or particle mode)
+  mode: "grid" | "particle";
   grid: Grid;
+  particleField?: ParticleField;
   
   // Scoring
   score: number;
@@ -107,7 +110,8 @@ export type GameAction =
   | { type: "SWIPE"; direction: "N" | "E" | "S" | "W" }
   | { type: "RESET" }
   | { type: "INITIALIZE"; config: Partial<GameConfig> }
-  | { type: "UPDATE_FLAGS"; flags: Partial<FeatureFlags> };
+  | { type: "UPDATE_FLAGS"; flags: Partial<FeatureFlags> }
+  | { type: "TOGGLE_MODE" }; // Switch between grid and particle mode
 
 /**
  * Configuration for initializing a new game
@@ -117,6 +121,7 @@ export interface GameConfig {
   featureFlags: FeatureFlags;
   seed?: number;
   boardSize?: number;
+  mode?: "grid" | "particle";
 }
 
 /**
